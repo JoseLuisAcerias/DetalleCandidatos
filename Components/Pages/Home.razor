@@ -1,0 +1,151 @@
+﻿@page "/"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<h1>Candidatos</h1>
+
+@if (candidatos == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-bordered align-middle text-nowrap">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre Completo</th>
+                    <th>Tipo Documento</th>
+                    <th>Num. Documento</th>
+                    <th>Correo</th>
+                    <th>Telefono</th>
+                    <th>Genero</th>
+                    <th>Municipio de Nacimiento</th>
+                    <th>Municipio de Vivienda</th>
+                    <th>Ocupación</th>
+                    <th>Años de Experiencia</th>
+                    <th>Tipo de Registro</th>
+                    <th>Estado del Candidato</th>
+                    <th>Fecha del Registro</th>
+                    <th>Proceso llamada Activo</th>
+                    <th>Estado Proceso de Llamada</th>
+                    <th>Contesto Llamada</th>
+                    <th>Detalle</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in candidatos)
+                {
+                    <tr>
+                        <td>@c.IdCandidato</td>
+                        <td>@c.nombreCompleto</td>
+                        <td>@c.tipoDocumento</td>
+                        <td>@c.numeroDocumento</td>
+                        <td>@c.correo</td>
+                        <td>@c.telefono</td>
+                        <td>@c.genero</td>
+                        <td>@c.municipioNacimiento</td>
+                        <td>@c.municipioVivienda</td>
+                        <td>@c.ocupacion</td>
+                        <td>@c.aniosExp</td>
+                        <td>@c.tipoRegistro</td>
+                        <td>@c.estadoCandidato</td>
+                        <td>@c.fechaRegistro</td>
+                        <td>@c.tieneProcesoLlamadaActivo</td>
+                        <td>@c.estadoProcesoLlamada</td>
+                        <td>@c.contestoLlamada</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-primary" @onclick="() => IrAlDetalle(c.IdCandidato)">
+                                Ver Detalle
+                            </button>
+                        </td>
+
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<Candidato>? candidatos;
+    private DetalleCandidato? detalleSeleccionado;
+    private bool cargandoDetalle = false;
+
+    //cargue pag inicial
+    protected override async Task OnInitializedAsync()
+    {
+        var respuesta = await Http.GetFromJsonAsync<RespuestaPaginada>(
+            "https://apiseleniaqas.pazdelrio.com.co/api/private/candidatos"
+        );
+        candidatos = respuesta?.Data;
+    }
+
+    // Cargue detalles de Usuarios
+    private async Task CargarDetalleUsuario(int id)
+    {
+        try
+        {
+            cargandoDetalle = true;
+            detalleSeleccionado = null; // Limpia el detalle anterior mientras carga
+
+            string url = $"https://apiseleniaqas.pazdelrio.com.co/api/private/candidatos/{id}";
+            detalleSeleccionado = await Http.GetFromJsonAsync<DetalleCandidato>(url);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al traer el detalle: {ex.Message}");
+        }
+        finally
+        {
+            cargandoDetalle = false;
+        }
+    }
+
+
+    public class RespuestaPaginada
+    {
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalRecords { get; set; }
+        public List<Candidato> Data { get; set; } = new();
+    }
+
+    public class DetalleCandidato
+    {
+        public string correo { get; set; } = "";
+    }
+
+
+
+    public class Candidato
+    {
+        public int IdCandidato { get; set; }
+        public string nombreCompleto { get; set; } = "";
+        public string tipoDocumento { get; set; } = "";
+        public string numeroDocumento { get; set; } = "";
+        public string correo { get; set; } = "";
+        public string telefono { get; set; } = "";
+        public string genero { get; set; } = "";
+        public string municipioNacimiento { get; set; } = "";
+        public string municipioVivienda { get; set; } = "";
+        public string ocupacion { get; set; } = "";
+        public int aniosExp { get; set; }
+        public string tipoRegistro { get; set; } = "";
+        public string estadoCandidato { get; set; } = "";
+        public string fechaRegistro { get; set; } = "";
+        public bool tieneProcesoLlamadaActivo { get; set; }
+        public string estadoProcesoLlamada { get; set; } = "";
+        public string contestoLlamada { get; set; } = "";
+
+    }
+    private void IrAlDetalle(int id)
+    {
+        // Redirige a la nueva URL pasando el ID del candidato
+        Navigation.NavigateTo($"/candidato/{id}");
+    }
+}

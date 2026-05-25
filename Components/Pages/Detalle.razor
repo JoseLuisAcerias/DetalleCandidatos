@@ -1,0 +1,73 @@
+﻿@page "/candidato/{Id:int}"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<div class="container mt-4">
+    <!-- Botón atras -->
+    <a href="/" class="btn btn-outline-secondary mb-4">
+        ← Volver a la lista
+    </a>
+
+    @if (cargando)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            
+        </div>
+    }
+    else
+    {
+        <h2 class="mb-4">Candidato: @detalle.idCandidato</h2>
+
+        
+        <div class="row g-4">
+            <!-- Detalle -->
+            <p class="mb-2"><strong>ID Candidato:</strong> @detalle.idCandidato</p>
+            <p class="mb-2"><strong>Perfil profesional:</strong> @detalle.perfilProfesional</p>
+          
+        </div>
+    }
+</div>
+
+
+
+@code {
+    // El parámetro captura automáticamente el ID de la URL
+    [Parameter] public int Id { get; set; }
+
+    private DetalleCandidato? detalle;
+    private bool cargando = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            cargando = true;
+            string url = $"https://apiseleniaqas.pazdelrio.com.co/api/private/candidatos/{Id}";
+
+            detalle = await Http.GetFromJsonAsync<DetalleCandidato>(url);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al traer detalles: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+
+
+    // Contenedor
+    public class DetalleCandidato
+    {
+
+        public int idCandidato { get; set; }
+        public string perfilProfesional { get; set; } = "";
+
+       
+        public int id { get; set; }
+
+    }
+}
